@@ -1,8 +1,8 @@
-// const launches = require('./launches.mongo')
+const launchesDatabase = require('./launches.mongo');
+const planets = require('./planets.mongo');
 
 const launches = new Map();
-
-let latestFlightNumber = 100;
+const DEFAULT_FLIGHT_NUMBER = 100;
 
 const launch = {
     // Set by server
@@ -18,14 +18,32 @@ const launch = {
     target: 'Kepler-442 b'
 };
 
+saveLaunch(launch);
+
 launches.set(launch.flightNumber, launch);
 
 function existsLaunchWithId(launchId) {
     return launches.has(launchId);
 }
 
-function getAllLaunches() {
-    return Array.from(launches.values());
+async function getLatestFlightNumber() {
+    const latestLaunch = await launchesDatabase
+    .findOne({})
+    .sort('-flightNumber');
+    
+    if (!latestLaunch) {
+        return DEFAULT_FLIGHT_NUMBER;
+    }
+
+    return latestLaunch.flightNumber;
+}
+
+
+async function getAllLaunches() {
+    return await launchesDatabase.find({}, {
+        '__v': 0, // Exclude version key
+        '_id': 0 // Exclude Object ID
+    });
 }
 
 function abortLaunchById(launchId) {
@@ -35,22 +53,43 @@ function abortLaunchById(launchId) {
     return aborted;
 }
 
-function addNewLaunch(launch) {
-    latestFlightNumber++;
+async function saveLaunch(launch) {
+    const planet = await planets.find({ keplerName: launch.target });
+
+    if (!planet.length) {
+        throw new Error('No matching planet found');
+    }
+
+    try {
+        await launchesDatabase.findOneAndUpdate(
+            {
+                flightNumber: launch.flightNumber
+            }, 
+            launch,
+            {
+                upsert: true
+            });
+    } catch (err) {
+        console.error('Error saving launch', err)
+    }
+}
+
+async function scheduleNewLaunch(launch) {
+    const newFlightNumber = await getLatestFlightNumber(launch) + 1;
+
     const newLaunch =  Object.assign(launch, {
-        ...launch, 
-        success: true,
-        upcoming: true,
-        customers: ['NASA', 'ZTM', 'RICARDO', 'COMAIR'],
-        flightNumber: latestFlightNumber
-    });
-    launches.set(latestFlightNumber, newLaunch);
-    return newLaunch;
+                ...launch, 
+                success: true,
+                upcoming: true,
+                customers: ['NASA', 'ZTM', 'RICARDO', 'COMAIR'],
+                flightNumber: newFlightNumber
+            });
+    await saveLaunch(newLaunch);
 }
 
 module.exports = {
     existsLaunchWithId,
     getAllLaunches,
-    addNewLaunch,
+    scheduleNewLaunch,
     abortLaunchById
 }

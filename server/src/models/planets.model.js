@@ -35,7 +35,10 @@ function loadPlanetsData() {
 }
 
 async function getAllPlanets() {
-    return await planets.find({});
+    return await planets.find({}, {
+        '__v': 0, // Exclude version key
+        '_id': 0 // Exclude Object ID
+    });
 }
 
 async function savePlanet(planet) {
@@ -53,7 +56,6 @@ async function savePlanet(planet) {
     } catch (err) {
         console.error('Error saving planet', err)
     }
-   
 }
 
 module.exports = {
