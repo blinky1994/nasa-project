@@ -11,7 +11,7 @@ const launchesSchema = new mongoose.Schema({
     mission: { type: String, required: true }, 
     rocket: { type: String, required: true }, 
     launchDate: { type: Date, required: true },
-    target: { type: String, required: true }, 
+    target: { type: String }, 
 });
 
 // Connects launchesSchema with the "launches" collection
