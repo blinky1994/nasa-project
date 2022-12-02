@@ -139,7 +139,6 @@ async function scheduleNewLaunch(launch) {
     }
 
     const newFlightNumber = await getLatestFlightNumber(launch) + 1;
-    console.log(newFlightNumber);
     const newLaunch =  Object.assign(launch, {
                 ...launch, 
                 success: true,
