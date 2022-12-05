@@ -19,4 +19,4 @@ USER node
 
 CMD [ "npm", "start", "--prefix", "server" ]
 
-EXPOSE 3001
+EXPOSE 8000

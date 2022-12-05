@@ -11,7 +11,7 @@ async function startServer() {
     await loadPlanetsData();
     await loadLaunchesData();
 
-    server.listen(process.env.PORT || 3001, () => {
+    server.listen(process.env.PORT || 8000, () => {
         console.log(`Listening on port ${process.env.PORT}`);
     });
 }
